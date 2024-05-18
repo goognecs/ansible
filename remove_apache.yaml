@@ -8,11 +8,10 @@
     apt:
       update_cache: yes
 
-  - name: Install Apache2 App
+  - name: Remove Apache2 App
     apt:
       name: apache2
-      state: latest
-     # state: absent #This will REMOVE the Apache APP
+      state: absent #This will REMOVE the Apache APP
 
   - name: Add PhP Support for Apache
     apt:
