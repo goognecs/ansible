@@ -7,17 +7,36 @@
   - name: Update Repository Index
     apt:
       update_cache: yes
+    when: ansible_distribution == "Ubuntu"
 
   - name: Install Apache2 App
     apt:
       name: apache2
       state: latest
      # state: absent #This will REMOVE the Apache APP
+    when: ansible_distribution == "Ubuntu"
 
   - name: Add PhP Support for Apache
     apt:
       name: libapache2-mod-php
       state: latest  # This will ensure that the php support has the LATEST-UPDATE
+    when: ansible_distribution == "Ubuntu"
+
+
+   #CENT OS
+
+  - name: Install httpd Server for CentOS
+    dnf:
+      name: httpd
+      state: latest
+     # state: absent #This will REMOVE the Apache APP
+    when: ansible_distribution == "CentOS"
+
+  - name: Add PhP Support for CentOS
+    dnf:
+      name: php
+      state: latest  # This will ensure that the php support has the LATEST-UPDATE
+    when: ansible_distribution == "CentOS"
 
 ###########################################
 ## RUN: ansible all -m ping -i inventory ##
