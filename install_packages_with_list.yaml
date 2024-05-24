@@ -1,0 +1,33 @@
+---
+
+- hosts: all
+  become: yes
+  tasks:
+
+  - name: Update Repository Index
+    apt:
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install Apache2 App & PhP Support for Ubuntu
+    apt:
+      name: 
+      - apache2
+      - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+  
+  ####################
+  ### FOR CENTOS #####
+  ####################
+
+  - name: Install HTTPD Server & PHP Support for CentOS
+    yum:
+      name: 
+      - httpd
+      - php
+      state: latest
+      update_cache: true             #This helps avoid writing plenty code for (updates) like we did 4 Ubuntu
+    when: ansible_distribution == "CentOS"
+
+
