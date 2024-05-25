@@ -1,0 +1,172 @@
+---
+
+- hosts: all
+  become: yes
+  tasks:
+
+  - name: Install Updates [Ubuntu]
+    tags: always
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+  
+  - name: Install Updates [CentOS]
+    tags: always
+    yum:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+  - name: Install Apache2 App & PhP Support for Ubuntu
+    tags: apache2, php, ubuntu, apache 
+    apt:
+      name:
+      - apache2
+      - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install httpd Server & PhP for CentOS
+    tags: apache, httpd, php, centos
+    yum:
+      name:
+      - httpd
+      - php
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: Start HTTPD (CentOS)
+    tags: httpd,centos,apache
+    service:
+      name: httpd
+      state: started
+    when: ansible_distribution == "CentOS"
+
+
+  - name: Change Email-Addr for Admin
+    tags: httpd,centos,apache
+    lineinfile: 
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin nikki@freelance.net
+    when: ansible_distribution == "CentOS"
+    register: httpdfile                   
+
+##################################################################################################
+## This will STORE/register this Email change with a VARIABLE (httpdfile). YOu can use any name ##
+##################################################################################################
+
+  - name: Restart HTTPD Server (CentOS)
+    tags: httpd,centos,apache
+    service:
+      name: httpd
+      state: restarted
+    when: httpdfile.changed  
+
+###########################################################################################################
+## This condition ensures that RESTART will only be executed if REGISTER [httpdfile] variable indicates ### 
+## that previous task made a change to the httpd.conf filee: If the STATE changes then RESTART ############
+###########################################################################################################
+
+  - name: Copying Default_site HTML for Sites
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644 
+
+- hosts: workstation
+  become: true
+  tasks:
+
+  - name: Install Unzip
+    package:
+      name: unzip
+
+  - name: Install Terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.8.4/terraform_1.8.4_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      owner: root
+      group: root
+      mode: 0755
+
+- hosts: db_server
+  become: true
+  tasks:
+
+  - name: Install MariaDB for Ubuntu
+    tags: db, mariadb, ubuntu
+    apt:
+      name:
+      - mariadb-server
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install MariaDB for CentOS
+    tags: db, mariadb, centos
+    yum:
+      name:
+      - mariadb
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+- hosts: file_server
+  become: true
+  tasks:
+
+  - name: Install Samba for Ubuntu
+    tags: file, samba
+    package:
+      name:
+      - samba
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Create User Account
+    tags: always
+    user: 
+      name: nikki
+      group: root
+
+  - name: SSH Key for Nikki
+    tags: always,ssh
+    authorized_key: 
+      user: nikki
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGc27LIAaPes54CIJoSiNM/hg672cImFQvwRMmCGYXTD ansible"
+    
+  - name: Add Sudoer File for Nikki
+    tags: always
+    copy:
+      src: sudoer_nikki
+      dest: /etc/sudoers.d/nikki
+      owner: root
+      group: root
+      mode: 0440
+
+
+####################################################
+## RUN: ansible-playbook --list-tags updates.yaml ##
+####################################################
+
+##########################################################################
+## RUN: ansible-playbook --tags centos --ask-become-pass updates.yaml ####
+##########################################################################
+
+# More than one tags?
+######################################################################################
+## RUN: ansible-playbook --tags "db,apache,centos" --ask-become-pass updates.yaml ####
+######################################################################################
+
