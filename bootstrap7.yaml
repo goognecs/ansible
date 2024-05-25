@@ -1,0 +1,52 @@
+---
+
+- hosts: all
+  become: yes
+  tasks:
+
+  - name: Install Updates [Ubuntu]
+    tags: always
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+  
+  - name: Install Updates [CentOS]
+    tags: always
+    yum:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+###########################################################################################################
+## We are creating a bootstrap script that will be used to add the Initial Configuration to the New Server# 
+## This is because this is a new Server that doesn't have a ANsible run on it before           ############
+###########################################################################################################
+#######################################################################
+## RUN theis BOOTSTRAP before running the server_provision.yaml file ##
+#######################################################################
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Create User Account
+    tags: always
+    user: 
+      name: nikki
+      group: root
+
+  - name: SSH Key for Nikki
+    tags: always,ssh
+    authorized_key: 
+      user: nikki
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGc27LIAaPes54CIJoSiNM/hg672cImFQvwRMmCGYXTD ansible"
+    
+  - name: Add Sudoer File for Nikki
+    tags: always
+    copy:
+      src: sudoer_nikki
+      dest: /etc/sudoers.d/nikki
+      owner: root
+      group: root
+      mode: 0440
