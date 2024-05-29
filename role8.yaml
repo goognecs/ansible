@@ -1,0 +1,63 @@
+---
+
+- hosts: all
+  become: yes
+  tasks:
+
+  - name: Install Updates [Ubuntu]
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+  
+  - name: Install Updates [CentOS]
+    tags: always
+    yum:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "CentOS"
+
+
+- hosts: all
+  become: true
+  roles:
+    - base
+
+
+- hosts: web_servers
+  become: true
+  roles: 
+    - web_servers
+
+
+- hosts: workstation
+  become: true
+  roles:
+    - workstation
+
+
+- hosts: db_server
+  become: true
+  roles:
+    - db_server
+
+
+- hosts: file_server
+  become: true
+  roles:
+    - file_server
+
+####################################################
+## RUN: ansible-playbook --list-tags updates.yaml ##
+####################################################
+
+##########################################################################
+## RUN: ansible-playbook --tags centos --ask-become-pass updates.yaml ####
+##########################################################################
+
+# More than one tags?
+######################################################################################
+## RUN: ansible-playbook --tags "db,apache,centos" --ask-become-pass updates.yaml ####
+######################################################################################
+
