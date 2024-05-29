@@ -1,0 +1,6 @@
+- name: SSH Key for Nikki
+  tags: always,ssh
+  authorized_key:
+    user: nikki
+    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGc27LIAaPes54CIJoSiNM/hg672cImFQvwRMmCGYXTD ansible"
+
